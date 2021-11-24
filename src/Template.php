@@ -4,6 +4,16 @@ namespace Silverslice\DocxTemplate;
 
 class Template
 {
+	/**
+	 * @var array Headers passed with downloaded file
+	 */
+	protected $header = [
+		'Content-Description' => 'File Transfer',
+		'Content-Transfer-Encoding' => 'binary',
+		'Content-Type' => 'application/msword',
+		'Expires' => '0',
+	];
+
     /** @var \ZipArchive */
     protected $zip;
 
@@ -102,7 +112,40 @@ class Template
         return $this->replace($var, $replace, false);
     }
 
-    /**
+	/**
+	 * Writes changes to a temporary file
+	 */
+	private function build() {
+		if (isset($this->contents)) {
+			$this->zip->addFromString('word/document.xml', $this->contents);
+		}
+
+		if (isset($this->footer)) {
+			$this->zip->addFromString('word/footer1.xml', $this->footer);
+		}
+
+		$this->zip->close();
+	}
+
+
+	/**
+	 * Returns built template as download
+	 */
+	public function download() {
+		$this->build();
+
+		$this->modifyHeader(['Content-Length' => filesize($this->tempFilename)]);
+		foreach ($this->header as $k=>$v) {
+			header($k . ': ' . $v);
+		}
+
+		readfile($this->tempFilename);
+
+		exit;
+	}
+
+
+	/**
      * Saves file
      *
      * @param $filename
@@ -111,15 +154,7 @@ class Template
      */
     public function save($filename)
     {
-        if (isset($this->contents)) {
-            $this->zip->addFromString('word/document.xml', $this->contents);
-        }
-
-        if (isset($this->footer)) {
-            $this->zip->addFromString('word/footer1.xml', $this->footer);
-        }
-
-        $this->zip->close();
+		$this->build();
 
         $res = @rename($this->tempFilename, $filename);
         if (!$res) {
@@ -199,4 +234,12 @@ class Template
         $lines = explode("\n", $string);
         return implode('</w:t><w:br/><w:t>', $lines);
     }
+
+	/**
+	 * Adds/replaces header key/value
+	 * @param array $header
+	 */
+	public function modifyHeader(array $header) {
+		$this->header = array_merge($this->header, $header);
+	}
 }
