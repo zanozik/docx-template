@@ -74,13 +74,19 @@ class Template
     /**
      * Replaces all occurrences of the search variable with the replacement string in document
      *
-     * @param string $var     The variable being searched for
+     * @param string|array $var     The variable being searched for, if array is passed, replaces in key=>value fashion
      * @param string $replace The replacement value that replaces found search variables
      * @param bool $escape    Escape special xml symbols
      * @return $this
      */
     public function replace($var, $replace, $escape = true)
     {
+		if(is_array($var)) {
+			foreach ($var as $k=>$v) {
+				$this->replace($k, $v, $escape);
+			}
+		}
+		
         $var = '{' . $var . '}';
 
         if ($escape) {
