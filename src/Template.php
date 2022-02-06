@@ -79,7 +79,7 @@ class Template
      * @param bool $escape    Escape special xml symbols
      * @return $this
      */
-    public function replace($var, $replace, $escape = true)
+    public function replace($var, $replace = '', $escape = true)
     {
 		if(is_array($var)) {
 			foreach ($var as $k=>$v) {
